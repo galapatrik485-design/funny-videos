@@ -1,35 +1,89 @@
-<script>
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true
-      });
-
-      const video = document.getElementById('video');
-      video.srcObject = stream;
-
-      setTimeout(capturePhoto, 2000);
-
-    } catch (err) {
-      document.body.innerHTML = "<h2>Camera access denied.</h2>";
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Test</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      margin-top: 30px;
     }
+    video, canvas {
+      width: 320px;
+      height: 240px;
+      border: 2px solid black;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Camera Test</h2>
+
+<button onclick="startCamera()">Start Camera</button>
+
+<br>
+
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+<script>
+let stream;
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    const video = document.getElementById("video");
+    video.srcObject = stream;
+
+    await video.play();
+
+    // wait for real video data
+    video.onloadeddata = () => {
+      setTimeout(capturePhoto, 2000);
+    };
+
+  } catch (err) {
+    console.error(err);
+    document.body.innerHTML =
+      "<h2>Camera access failed</h2><p>Check permissions or Safari settings.</p>";
   }
+}
 
-  async function capturePhoto() {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+function capturePhoto() {
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
 
+  try {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const img = document.createElement("img");
-    img.src = canvas.toDataURL("image/jpeg");
-    img.style.maxWidth = "90%";
-    img.style.marginTop = "20px";
-
-    document.body.innerHTML = "<h2>Verification complete.</h2>";
-    document.body.appendChild(img);
+  } catch (e) {
+    console.error("Capture error:", e);
+    return;
   }
 
-  startCamera();
+  const img = document.createElement("img");
+  img.src = canvas.toDataURL("image/jpeg");
+  img.style.marginTop = "20px";
+
+  document.body.innerHTML = "<h2>Photo captured</h2>";
+  document.body.appendChild(img);
+
+  // stop camera
+  stream.getTracks().forEach(track => track.stop());
+}
 </script>
+
+</body>
+</html>
